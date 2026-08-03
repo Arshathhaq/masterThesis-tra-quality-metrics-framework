@@ -1,0 +1,776 @@
+{
+  "findings": [
+    [
+      "high",
+      "CM-08 External / network-facing interface coverage: 1 flagged - NFI-1 - external interface never attacked."
+    ],
+    [
+      "high",
+      "CM-22 Rating-distribution / rubber-stamping detector: 1 flagged - 13/13 threats share the same rating 'Moderate' - possible rubber-stamping."
+    ],
+    [
+      "warn",
+      "1/11 protection goals have no threat scenario: C-2."
+    ],
+    [
+      "warn",
+      "1/10 in-scope components are never attacked: SW-6 (PLC6 - Permeate and Backwash)."
+    ],
+    [
+      "warn",
+      "1/4 assumptions are not validated."
+    ],
+    [
+      "warn",
+      "CM-07 Interface coverage by threats: 2 flagged - LI-10 (Field bus interface; owner SW-10) - never used as an AttackInterface; LI-6 (PLC6 control interface; owner SW-6) - never used as an AttackInterface."
+    ]
+  ],
+  "summary": {
+    "assets": 9,
+    "protection_goals": 11,
+    "threats": 13,
+    "zones": 6,
+    "components": 13,
+    "in_scope": 10,
+    "out_of_scope": 3,
+    "assumptions": 4,
+    "interfaces": 11,
+    "zone_exposures": 11,
+    "target_area": "Software Component development",
+    "component_key": "SWComponents"
+  },
+  "core": [
+    {
+      "id": "CM-01",
+      "name": "Relevant-role / workshop participation",
+      "dim": "Process & Governance",
+      "auto": "Semi-auto",
+      "refs": "I2-Q3,Q21; I4-Q3; I5-Q5",
+      "note": "workshop present with a non-empty participant list, a moderator and >= 3 participants (roles cannot be read from the schema - presence/count only)",
+      "num": 0,
+      "den": 1,
+      "better": "high",
+      "status": "na",
+      "detail": {
+        "pass": [
+          "no workshop data in this TRA schema (not assessable)"
+        ],
+        "fail": []
+      },
+      "value": 0.0,
+      "display": "n/a"
+    },
+    {
+      "id": "CM-02",
+      "name": "Living-document maintenance (updated since creation)",
+      "dim": "Process & Governance",
+      "auto": "Auto",
+      "refs": "I2-Q3,Q5",
+      "note": "changedDate is later than createdDate (document was updated, not write-once)",
+      "num": 1,
+      "den": 1,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "updated: created 2024-11-01 -> changed 2025-01-15"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "1/1 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-03",
+      "name": "Mandatory field/section completion",
+      "dim": "Formal Completeness",
+      "auto": "Auto",
+      "refs": "I1-Q6,Q20; I2-Q10,Q21",
+      "note": "every required section present and carrying content (e.g. >=1 threat scenario, non-empty system overview)",
+      "num": 8,
+      "den": 8,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "Assets",
+          "ProtectionGoals",
+          "ThreatScenarios",
+          "SecurityZones",
+          "Components",
+          "Assumptions",
+          "Project",
+          "IntendedOp"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "8/8 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-04",
+      "name": "Placeholder / unfinished-entry detection",
+      "dim": "Formal Completeness",
+      "auto": "Auto",
+      "refs": "I1-Q6",
+      "note": "QUESTION / ?? / TBD / TODO / FIXME / placeholder occurrences (lower is better)",
+      "kind": "count",
+      "num": 0,
+      "den": null,
+      "better": "low",
+      "detail": {
+        "pass": [],
+        "fail": []
+      },
+      "value": 0,
+      "display": "0",
+      "status": "ok"
+    },
+    {
+      "id": "CM-05",
+      "name": "Assumption validation ratio",
+      "dim": "Formal Completeness",
+      "auto": "Auto",
+      "refs": "Maturity model (Assumptions / Validation)",
+      "note": "assumption explicitly flagged as validated",
+      "num": 3,
+      "den": 4,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "A_zone-1 (Field wiring physically protected)",
+          "A_zone-2 (Engineering workstation hardened)",
+          "A_zone-4 (Control protocols lack authentication)"
+        ],
+        "fail": [
+          "A_zone-3 (Plant boundary firewall segmentation) - not validated"
+        ]
+      },
+      "value": 75.0,
+      "display": "3/4 = 75.0%",
+      "status": "warn"
+    },
+    {
+      "id": "CM-06",
+      "name": "Component coverage by threats",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I1-Q10,Q17; I3-Q11,Q12; I5-Q8",
+      "note": "in-scope component reached by >=1 threat (interface or communication)",
+      "num": 9,
+      "den": 10,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "SW-1 (PLC1 - Raw Water Supply) - reached via interface LI-1; communication LC-1 (Field sensor data to PLC1) -> LI-1, LC-2 (PLC1 process data to SCADA) -> LI-7",
+          "SW-2 (PLC2 - Chemical Dosing) - reached via interface LI-2",
+          "SW-3 (PLC3 - Ultrafiltration) - reached via interface LI-3",
+          "SW-4 (PLC4 - Dechlorination) - reached via interface LI-4",
+          "SW-5 (PLC5 - Reverse Osmosis) - reached via interface LI-5",
+          "SW-7 (SCADA / HMI Workstation) - reached via interface LI-7; communication LC-2 (PLC1 process data to SCADA) -> LI-7, LC-3 (SCADA data to historian) -> LI-8",
+          "SW-8 (Process Historian) - reached via interface LI-8; communication LC-3 (SCADA data to historian) -> LI-8",
+          "SW-9 (Engineering Workstation) - reached via interface LI-9; communication LC-4 (Engineering download to PLC3) -> LI-3, LC-4 (Engineering download to PLC3) -> LI-3",
+          "SW-10 (Level-0 Field Devices) - reached via communication LC-1 (Field sensor data to PLC1) -> LI-1"
+        ],
+        "fail": [
+          "SW-6 (PLC6 - Permeate and Backwash) - missing threat linkage: none of its interfaces [LI-6] and no communication is used as an AttackInterface"
+        ]
+      },
+      "value": 90.0,
+      "display": "9/10 = 90.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-07",
+      "name": "Interface coverage by threats",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I1-Q9; I3-Q11,Q12; I5-Q8",
+      "note": "Logical interfaces used as an attack surface",
+      "num": 8,
+      "den": 10,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "LI-1 (PLC1 control interface; owner SW-1)",
+          "LI-2 (PLC2 control interface; owner SW-2)",
+          "LI-3 (PLC3 control interface; owner SW-3)",
+          "LI-4 (PLC4 control interface; owner SW-4)",
+          "LI-5 (PLC5 control interface; owner SW-5)",
+          "LI-7 (HMI operator interface; owner SW-7)",
+          "LI-8 (Historian query API; owner SW-8)",
+          "LI-9 (Engineering download interface; owner SW-9)"
+        ],
+        "fail": [
+          "LI-10 (Field bus interface; owner SW-10) - never used as an AttackInterface",
+          "LI-6 (PLC6 control interface; owner SW-6) - never used as an AttackInterface"
+        ]
+      },
+      "value": 80.0,
+      "display": "8/10 = 80.0%",
+      "status": "warn"
+    },
+    {
+      "id": "CM-08",
+      "name": "External / network-facing interface coverage",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I1-Q9,Q19",
+      "note": "network-facing interfaces used as an attack surface",
+      "num": 0,
+      "den": 1,
+      "better": "high",
+      "detail": {
+        "pass": [],
+        "fail": [
+          "NFI-1 - external interface never attacked"
+        ]
+      },
+      "value": 0.0,
+      "display": "0/1 = 0.0%",
+      "status": "bad"
+    },
+    {
+      "id": "CM-09",
+      "name": "Communication coverage by threats",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I1-Q9,Q20; I3-Q11,Q12; I5-Q8",
+      "note": "each inter-component communication whose target interface is used as an attack surface",
+      "num": 4,
+      "den": 4,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "LC-1 (Field sensor data to PLC1) -> LI-1",
+          "LC-2 (PLC1 process data to SCADA) -> LI-7",
+          "LC-3 (SCADA data to historian) -> LI-8",
+          "LC-4 (Engineering download to PLC3) -> LI-3"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "4/4 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-10",
+      "name": "Protection-goal coverage in threat analysis",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I1-Q9,Q10; I3-Q11",
+      "note": "every non-negligible protection goal linked to >=1 threat",
+      "num": 10,
+      "den": 10,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "I-1 (Integrity of sensor measurements)",
+          "I-2 (Integrity of actuator commands)",
+          "I-3 (Integrity of PLC control logic)",
+          "A-1 (Availability of water treatment process)",
+          "A-2 (Availability of SCADA monitoring)",
+          "I-4 (Integrity of historian data)",
+          "I-5 (Integrity of HMI configuration)",
+          "I-6 (Integrity of engineering project files)",
+          "C-1 (Confidentiality of process design and setpoints)",
+          "A-3 (Physical plant and process safety)",
+          "C-2 (Confidentiality of historian reporting data) - negligible impact (not required)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "10/10 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-11",
+      "name": "Asset coverage / asset-to-protection-goal mapping",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I3-Q5,Q11",
+      "note": "every asset represented by >=1 protection goal",
+      "num": 9,
+      "den": 9,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "Data-1 (Sensor measurements) - covered by I-1 (Integrity of sensor measurements)",
+          "Data-2 (PLC control logic and setpoints) - covered by I-3 (Integrity of PLC control logic), C-1 (Confidentiality of process design and setpoints)",
+          "Data-3 (Actuator command signals) - covered by I-2 (Integrity of actuator commands)",
+          "Data-4 (Historian process database) - covered by I-4 (Integrity of historian data), C-2 (Confidentiality of historian reporting data)",
+          "Data-5 (HMI configuration and views) - covered by I-5 (Integrity of HMI configuration)",
+          "Data-6 (Engineering project files) - covered by I-6 (Integrity of engineering project files)",
+          "Func-1 (Water treatment process operation) - covered by A-1 (Availability of water treatment process)",
+          "Func-2 (Physical plant safety) - covered by A-3 (Physical plant and process safety)",
+          "Func-3 (SCADA monitoring functionality) - covered by A-2 (Availability of SCADA monitoring)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "9/9 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-12",
+      "name": "Asset mapping to components / communications",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I3-Q5,Q12",
+      "note": "each asset traceable to a system component or communication (asset -> protection goal -> threat -> attacked interface)",
+      "num": 9,
+      "den": 9,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "Data-1 (Sensor measurements) - mapped via component(s) SW-1; communication target(s) LI-1",
+          "Data-2 (PLC control logic and setpoints) - mapped via component(s) SW-5, SW-9",
+          "Data-3 (Actuator command signals) - mapped via component(s) SW-1; communication target(s) LI-1",
+          "Data-4 (Historian process database) - mapped via component(s) SW-8; communication target(s) LI-8",
+          "Data-5 (HMI configuration and views) - mapped via component(s) SW-7; communication target(s) LI-7",
+          "Data-6 (Engineering project files) - mapped via component(s) SW-9",
+          "Func-1 (Water treatment process operation) - mapped via component(s) SW-2, SW-3, SW-4; communication target(s) LI-3",
+          "Func-2 (Physical plant safety) - mapped via component(s) SW-1, SW-2; communication target(s) LI-1",
+          "Func-3 (SCADA monitoring functionality) - mapped via component(s) SW-7; communication target(s) LI-7"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "9/9 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-13",
+      "name": "System-overview / description presence",
+      "dim": "Comprehensibility",
+      "auto": "Semi-auto",
+      "refs": "I2-Q3,Q5,Q18; I3-Q5",
+      "note": "intended-operation / system-overview text has >= 20 words",
+      "num": 1,
+      "den": 1,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "system overview has 146 word(s)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "1/1 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-14",
+      "name": "Out-of-scope boundaries",
+      "dim": "Coverage",
+      "auto": "Semi-auto",
+      "refs": "I1-Q3; I2-Q4; I4-Q5,Q10",
+      "note": "out-of-scope components carry an explicit justification",
+      "num": 3,
+      "den": 3,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "SW-11 (Plant Firewall)",
+          "SW-12 (Vendor Remote Support)",
+          "SW-13 (Enterprise Reporting Client)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "3/3 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-15",
+      "name": "Scope clarity by descriptions",
+      "dim": "Comprehensibility",
+      "auto": "Semi-auto",
+      "refs": "I1-Q3; I2-Q4; I4-Q5,Q11",
+      "note": "each component carries a descriptive scope text (>= 5 words)",
+      "num": 13,
+      "den": 13,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "SW-1 (PLC1 - Raw Water Supply) - 24 word(s)",
+          "SW-2 (PLC2 - Chemical Dosing) - 20 word(s)",
+          "SW-3 (PLC3 - Ultrafiltration) - 11 word(s)",
+          "SW-4 (PLC4 - Dechlorination) - 13 word(s)",
+          "SW-5 (PLC5 - Reverse Osmosis) - 14 word(s)",
+          "SW-6 (PLC6 - Permeate and Backwash) - 14 word(s)",
+          "SW-7 (SCADA / HMI Workstation) - 17 word(s)",
+          "SW-8 (Process Historian) - 19 word(s)",
+          "SW-9 (Engineering Workstation) - 16 word(s)",
+          "SW-10 (Level-0 Field Devices) - 25 word(s)",
+          "SW-11 (Plant Firewall) - 21 word(s)",
+          "SW-12 (Vendor Remote Support) - 26 word(s)",
+          "SW-13 (Enterprise Reporting Client) - 20 word(s)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "13/13 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-16",
+      "name": "No-threat / empty-analysis red flag",
+      "dim": "Coverage",
+      "auto": "Auto",
+      "refs": "I4-Q10",
+      "note": "a TRA with zero threats is a serious red flag",
+      "num": 1,
+      "den": 1,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "13 threat scenarios present"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "1/1 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-17",
+      "name": "Threat specificity vs good-threat list (rule-based NLP)",
+      "dim": "Consistency & Traceability",
+      "auto": "Semi-auto",
+      "refs": "I3-Q6,Q9,Q13; I4-Q6,Q13; I5-Q14",
+      "note": "each threat compared against 109 good threats (410-term IDF-weighted vocabulary); specific AND component/interface-linked",
+      "num": 13,
+      "den": 13,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "T-1 (False sensor data injection to PLC1) - specific (100%; concrete terms: water, tank, sensor, forged, controller, open)",
+          "T-2 (Actuator command manipulation on control ring) - specific (100%; concrete terms: against, middle, controller, unsafe, open, manipulation)",
+          "T-3 (Unauthorised modification of PLC control logic) - specific (100%; concrete terms: downloads, controller, plc, process, control, engineering)",
+          "T-4 (Denial of service on the control ring) - specific (100%; concrete terms: controllers, traffic, state, process, control)",
+          "T-5 (Compromise of the SCADA/HMI workstation) - specific (100%; concrete terms: alarms, disrupt, process)",
+          "T-6 (Spoofed stop command halts raw water pump) - specific (100%; concrete terms: water, supply, production, downstream, forged, pump)",
+          "T-7 (Tampering with historian records) - specific (100%; concrete terms: stored, api, historian, manipulation, later, process)",
+          "T-8 (HMI alarm masking) - specific (100%; concrete terms: alarms, critical, state, process, configuration)",
+          "T-9 (Malware on engineering workstation alters controller project) - specific (100%; concrete terms: controller, project, manipulation, engineering)",
+          "T-10 (Eavesdropping on unencrypted control traffic) - specific (100%; concrete terms: traffic, manipulation, control)",
+          "T-11 (Coordinated overflow of the raw water tank) - specific (100%; concrete terms: water, tank, controller, open, protection, physical)",
+          "T-12 (Chemical overdose via dosing controller manipulation) - specific (100%; concrete terms: water, dosing, chemical, controller, manipulation, treatment)",
+          "T-13 (Replay attack on dechlorination controller) - specific (100%; concrete terms: downstream, controller, wrong, protection)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "13/13 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-18",
+      "name": "Protection-goal C/I/A balance",
+      "dim": "Consistency & Traceability",
+      "auto": "Auto",
+      "refs": "I1-Q9",
+      "note": "protection goals span Confidentiality, Integrity and Availability",
+      "num": 3,
+      "den": 3,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "Confidentiality - 2 protection goal(s)",
+          "Integrity - 6 protection goal(s)",
+          "Availability - 3 protection goal(s)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "3/3 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-19",
+      "name": "Rating consistency across similar threats",
+      "dim": "Consistency & Traceability",
+      "auto": "Semi-auto",
+      "refs": "I1-Q11; I2-Q11; I4-Q11,Q12; I5-Q11,Q20",
+      "note": "no near-duplicate threat pairs found (n/a)",
+      "status": "na",
+      "better": "high",
+      "detail": {
+        "pass": [
+          "no similar-threat pairs detected"
+        ],
+        "fail": []
+      },
+      "value": 0.0,
+      "display": "n/a"
+    },
+    {
+      "id": "CM-20",
+      "name": "Rating coherence & justification",
+      "dim": "Consistency & Traceability",
+      "auto": "Semi-auto",
+      "refs": "I1-Q12,Q16; I2-Q13,Q17",
+      "note": "stored risk matches the risk matrix value derived from impact+likelihood AND rating carries an explanatory comment",
+      "num": 13,
+      "den": 13,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "T-1 (False sensor data injection to PLC1)",
+          "T-2 (Actuator command manipulation on control ring)",
+          "T-3 (Unauthorised modification of PLC control logic)",
+          "T-4 (Denial of service on the control ring)",
+          "T-5 (Compromise of the SCADA/HMI workstation)",
+          "T-6 (Spoofed stop command halts raw water pump)",
+          "T-7 (Tampering with historian records)",
+          "T-8 (HMI alarm masking)",
+          "T-9 (Malware on engineering workstation alters controller project)",
+          "T-10 (Eavesdropping on unencrypted control traffic)",
+          "T-11 (Coordinated overflow of the raw water tank)",
+          "T-12 (Chemical overdose via dosing controller manipulation)",
+          "T-13 (Replay attack on dechlorination controller)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "13/13 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-21",
+      "name": "Risk-treatment / handling decision coverage",
+      "dim": "Consistency & Traceability",
+      "auto": "Auto",
+      "refs": "I5-Q11",
+      "note": "every threat has a documented treatment decision (mitigate / avoid / accept / re-rate)",
+      "num": 13,
+      "den": 13,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "T-1 (False sensor data injection to PLC1) - mitigation, accepted",
+          "T-2 (Actuator command manipulation on control ring) - mitigation, accepted",
+          "T-3 (Unauthorised modification of PLC control logic) - mitigation, accepted",
+          "T-4 (Denial of service on the control ring) - accepted",
+          "T-5 (Compromise of the SCADA/HMI workstation) - accepted",
+          "T-6 (Spoofed stop command halts raw water pump) - mitigation, accepted",
+          "T-7 (Tampering with historian records) - accepted",
+          "T-8 (HMI alarm masking) - accepted",
+          "T-9 (Malware on engineering workstation alters controller project) - mitigation, accepted",
+          "T-10 (Eavesdropping on unencrypted control traffic) - accepted",
+          "T-11 (Coordinated overflow of the raw water tank) - mitigation, accepted",
+          "T-12 (Chemical overdose via dosing controller manipulation) - mitigation, accepted",
+          "T-13 (Replay attack on dechlorination controller) - accepted"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "13/13 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-22",
+      "name": "Rating-distribution / rubber-stamping detector",
+      "dim": "Consistency & Traceability",
+      "auto": "Auto",
+      "refs": "I1-Q11; I2-Q11; I4-Q11,Q12; I5-Q11,Q20",
+      "note": "risk ratings are discriminated (not all collapsed onto one value)",
+      "value": 0.0,
+      "better": "high",
+      "status": "bad",
+      "detail": {
+        "pass": [
+          "rating distribution - Moderate:13"
+        ],
+        "fail": [
+          "13/13 threats share the same rating 'Moderate' - possible rubber-stamping"
+        ]
+      },
+      "display": "0.0%"
+    },
+    {
+      "id": "CM-23",
+      "name": "Assumption usage / linkage by type",
+      "dim": "Consistency & Traceability",
+      "auto": "Auto",
+      "refs": "Maturity model (Assumptions)",
+      "note": "each General assumption is actually referenced (not declared and ignored)",
+      "num": 0,
+      "den": 1,
+      "better": "high",
+      "status": "na",
+      "detail": {
+        "pass": [
+          "no General assumptions to assess"
+        ],
+        "fail": []
+      },
+      "value": 0.0,
+      "display": "n/a"
+    },
+    {
+      "id": "CM-24",
+      "name": "Duplicate / similar-threat detection",
+      "dim": "Consistency & Traceability",
+      "auto": "Semi-auto",
+      "refs": "I5-Q11,Q12,Q20",
+      "note": "near-duplicate threat pairs (Jaccard>=0.6); lower is better",
+      "kind": "count",
+      "num": 0,
+      "den": null,
+      "better": "low",
+      "detail": {
+        "pass": [
+          "no near-duplicate threat pairs"
+        ],
+        "fail": []
+      },
+      "value": 0,
+      "display": "0",
+      "status": "ok"
+    },
+    {
+      "id": "CM-25",
+      "name": "Threat-structure completeness (semantic)",
+      "dim": "Comprehensibility",
+      "auto": "Semi-auto",
+      "refs": "I1-Q13; I3-Q13; I4-Q13; I5-Q13",
+      "note": "actor / action / target-interface / weakness / impact / protection-goal slots",
+      "num": 78,
+      "den": 78,
+      "better": "high",
+      "detail": {
+        "pass": [],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "78/78 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-26",
+      "name": "Vagueness / imprecision reduction",
+      "dim": "Comprehensibility",
+      "auto": "Semi-auto",
+      "refs": "I1-Q14; I2-Q14; I3-Q14; I4-Q14,Q15",
+      "note": "threat description not dominated by vague / generic wording (< 2 vague terms)",
+      "num": 13,
+      "den": 13,
+      "better": "high",
+      "detail": {
+        "pass": [
+          "T-1 (False sensor data injection to PLC1)",
+          "T-2 (Actuator command manipulation on control ring)",
+          "T-3 (Unauthorised modification of PLC control logic)",
+          "T-4 (Denial of service on the control ring)",
+          "T-5 (Compromise of the SCADA/HMI workstation)",
+          "T-6 (Spoofed stop command halts raw water pump)",
+          "T-7 (Tampering with historian records)",
+          "T-8 (HMI alarm masking)",
+          "T-9 (Malware on engineering workstation alters controller project)",
+          "T-10 (Eavesdropping on unencrypted control traffic)",
+          "T-11 (Coordinated overflow of the raw water tank)",
+          "T-12 (Chemical overdose via dosing controller manipulation)",
+          "T-13 (Replay attack on dechlorination controller)"
+        ],
+        "fail": []
+      },
+      "value": 100.0,
+      "display": "13/13 = 100.0%",
+      "status": "ok"
+    },
+    {
+      "id": "CM-27",
+      "name": "Authority-approval presence",
+      "dim": "Process & Governance",
+      "auto": "Auto",
+      "refs": "Maturity model (Authority Approval); IEC 62443-4-1 SM-1(e)",
+      "note": "section carries an explicit approval / sign-off marker",
+      "num": 0,
+      "den": 5,
+      "better": "high",
+      "status": "na",
+      "detail": {
+        "pass": [
+          "no approval / sign-off field exists in this TRA schema (not assessable)"
+        ],
+        "fail": []
+      },
+      "value": 0.0,
+      "display": "n/a"
+    },
+    {
+      "id": "CM-28",
+      "name": "Known-deficiency evidence references",
+      "dim": "Process & Governance",
+      "auto": "Semi-auto",
+      "refs": "Maturity model (Known Deficiencies)",
+      "note": "TRA references external evidence artifacts (SRS, SCA, pen-test, SVM, EOL, CVE)",
+      "num": 0,
+      "den": 1,
+      "better": "high",
+      "status": "na",
+      "detail": {
+        "pass": [
+          "no deficiency-evidence field exists in this TRA schema (not assessable)"
+        ],
+        "fail": []
+      },
+      "value": 0.0,
+      "display": "n/a"
+    }
+  ],
+  "scorecard": {
+    "overall": 89.6,
+    "overall_status": "ok",
+    "dimensions": [
+      {
+        "dim": "Process & Governance",
+        "score": 100.0,
+        "n": 1,
+        "status": "ok"
+      },
+      {
+        "dim": "Formal Completeness",
+        "score": 86.7,
+        "n": 3,
+        "status": "ok"
+      },
+      {
+        "dim": "Coverage",
+        "score": 86.7,
+        "n": 9,
+        "status": "ok"
+      },
+      {
+        "dim": "Consistency & Traceability",
+        "score": 86.7,
+        "n": 6,
+        "status": "ok"
+      },
+      {
+        "dim": "Comprehensibility",
+        "score": 100.0,
+        "n": 4,
+        "status": "ok"
+      }
+    ]
+  },
+  "project": {
+    "TRAProjectName": "MiniCPS Secure Water Treatment Testbed",
+    "responsibleOrg": "Thesis Evaluation Case Study",
+    "AccessScope": {
+      "name": "Public Reference",
+      "accessScopeID": "AS-1"
+    },
+    "Config": {
+      "selection": "Software"
+    },
+    "projectID": "minicps-swat-v0",
+    "targetOfAnalysis": "Six-stage water treatment process control system based on the open-source MiniCPS simulation of the Secure Water Treatment (SWaT) testbed, comprising six stage controllers (PLC1-PLC6), a supervisory SCADA/HMI workstation, a process historian, an engineering workstation, and Level-0 field devices (sensors and actuators) communicating over Modbus-TCP and EtherNet/IP.",
+    "overallProjectType": "Industrial Control System",
+    "createdDate": "2024-11-01"
+  },
+  "status": "Under_Review"
+}
