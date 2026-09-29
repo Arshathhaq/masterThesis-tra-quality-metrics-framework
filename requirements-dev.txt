@@ -1,0 +1,16 @@
+# Development / evaluation dependencies
+#
+# The core tool (src/tra_quality_report.py) uses ONLY the Python standard
+# library and needs nothing from this file. These packages are required only
+# for the auxiliary scripts:
+#
+#   - MiniCPS_Evaluation/run_mutation_experiment.py   (heat-map figure)
+#   - scripts/generate_maturity_assessment.py         (Excel workbook builder)
+#   - MiniCPS_Evaluation/build_minicps_json_only_excel.py
+#   - tests/test_thesis_regression.py                 (automated thesis evidence regression)
+
+openpyxl>=3.1
+matplotlib>=3.7
+numpy>=1.24
+pytest>=8.0
+pytest-cov>=5.0

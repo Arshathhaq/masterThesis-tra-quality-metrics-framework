@@ -1,0 +1,1455 @@
+{
+  "JSON_VERSION": "2",
+  "TRAVersionName": "MiniCPS mutation V8: Risk rating contradicts impact x likelihood",
+  "TRAVersionNumber": "0.1",
+  "status": "Under_Review",
+  "createdBy": "Master Thesis Evaluation",
+  "changedBy": "Master Thesis Evaluation",
+  "Project": {
+    "TRAProjectName": "MiniCPS Secure Water Treatment Testbed",
+    "responsibleOrg": "Thesis Evaluation Case Study",
+    "AccessScope": {
+      "name": "Public Reference",
+      "accessScopeID": "AS-1"
+    },
+    "Config": {
+      "selection": "Software"
+    },
+    "projectID": "minicps-swat-v0",
+    "targetOfAnalysis": "Six-stage water treatment process control system based on the open-source MiniCPS simulation of the Secure Water Treatment (SWaT) testbed, comprising six stage controllers (PLC1-PLC6), a supervisory SCADA/HMI workstation, a process historian, an engineering workstation, and Level-0 field devices (sensors and actuators) communicating over Modbus-TCP and EtherNet/IP.",
+    "overallProjectType": "Industrial Control System",
+    "createdDate": "2024-11-01"
+  },
+  "changedDate": "2025-01-15",
+  "createdDate": "2024-11-01",
+  "IntendedOp": {
+    "operationalEnvironment": "The system continuously controls a six-stage water purification process: raw water intake and storage (Stage 1), chemical pre-treatment and dosing (Stage 2), ultrafiltration (Stage 3), dechlorination by UV and sodium bisulphite (Stage 4), reverse osmosis (Stage 5), and permeate transfer, backwash and cleaning (Stage 6). Each stage is governed by a dedicated programmable logic controller (PLC1-PLC6) that reads level, flow and quality sensors and drives motorised valves and pumps. The PLCs exchange process state over a Level-1 control ring network and report to a Level-2 supervisory network hosting the SCADA/HMI workstation and the process historian. Operators monitor and command the plant through the HMI; engineers maintain controller logic from an engineering workstation. The plant is expected to run unattended for long periods, with operators intervening only on alarms.",
+    "intendedUsers": "Plant operators, control engineers, and maintenance staff of the water treatment facility."
+  },
+  "Assumptions": [
+    {
+      "assumption_id": "A_zone-1",
+      "name": "Field wiring physically protected",
+      "description": "Level-0 sensor and actuator wiring runs inside locked control cabinets and conduit within the physically secured plant floor, so direct physical tampering with field signals requires defeating site access controls first.",
+      "validated": true,
+      "assumptionType": "ZoneSpecific",
+      "ZoneExposures": [
+        {
+          "SecurityZone": {
+            "zone_id": "SZ-4"
+          }
+        }
+      ]
+    },
+    {
+      "assumption_id": "A_zone-2",
+      "name": "Engineering workstation hardened",
+      "description": "The engineering workstation is a managed host with application allow-listing, current operating-system patches, and disabled removable-media autorun, and it is only used for controller maintenance tasks.",
+      "validated": true,
+      "assumptionType": "ZoneSpecific",
+      "ZoneExposures": [
+        {
+          "SecurityZone": {
+            "zone_id": "SZ-5"
+          }
+        }
+      ]
+    },
+    {
+      "assumption_id": "A_zone-3",
+      "name": "Plant boundary firewall segmentation",
+      "description": "A firewall is expected to separate the Level-2 supervisory network from the enterprise and external networks, but the rule set has not yet been audited and the segmentation is therefore not yet confirmed.",
+      "validated": false,
+      "assumptionType": "ZoneSpecific",
+      "ZoneExposures": [
+        {
+          "SecurityZone": {
+            "zone_id": "SZ-1"
+          }
+        }
+      ]
+    },
+    {
+      "assumption_id": "A_zone-4",
+      "name": "Control protocols lack authentication",
+      "description": "The Modbus-TCP and EtherNet/IP protocols used on the Level-1 control ring provide no message authentication or integrity protection, so any host on the control network can read and write process data.",
+      "validated": true,
+      "assumptionType": "ZoneSpecific",
+      "ZoneExposures": [
+        {
+          "SecurityZone": {
+            "zone_id": "SZ-3"
+          }
+        }
+      ]
+    }
+  ],
+  "Assets": [
+    {
+      "asset_id": "Data-1",
+      "name": "Sensor measurements",
+      "description": "Level, flow, pH, ORP and conductivity readings reported by Level-0 field instruments to the stage controllers.",
+      "assetType": "Data"
+    },
+    {
+      "asset_id": "Data-2",
+      "name": "PLC control logic and setpoints",
+      "description": "The ladder/structured-text control programs and process setpoints executing on PLC1-PLC6 that determine valve and pump behaviour.",
+      "assetType": "Data"
+    },
+    {
+      "asset_id": "Data-3",
+      "name": "Actuator command signals",
+      "description": "Open/close and start/stop commands issued by the controllers to motorised valves and pumps.",
+      "assetType": "Data"
+    },
+    {
+      "asset_id": "Data-4",
+      "name": "Historian process database",
+      "description": "The time-series record of process variables, alarms and operator actions retained for monitoring, reporting and forensic analysis.",
+      "assetType": "Data"
+    },
+    {
+      "asset_id": "Data-5",
+      "name": "HMI configuration and views",
+      "description": "The graphics, tag mappings and alarm definitions presented to operators on the SCADA/HMI workstation.",
+      "assetType": "Data"
+    },
+    {
+      "asset_id": "Data-6",
+      "name": "Engineering project files",
+      "description": "The controller project sources and download images managed on the engineering workstation.",
+      "assetType": "Data"
+    },
+    {
+      "asset_id": "Func-1",
+      "name": "Water treatment process operation",
+      "description": "The continuous availability of the six-stage purification process producing water that meets quality targets.",
+      "assetType": "Functionality"
+    },
+    {
+      "asset_id": "Func-2",
+      "name": "Physical plant safety",
+      "description": "The prevention of unsafe physical states such as tank overflow, dry-running pumps, and chemical overdosing.",
+      "assetType": "Functionality"
+    },
+    {
+      "asset_id": "Func-3",
+      "name": "SCADA monitoring functionality",
+      "description": "The operators' ability to observe live process state and receive alarms through the supervisory system.",
+      "assetType": "Functionality"
+    }
+  ],
+  "ProtectionGoals": [
+    {
+      "pg_id": "I-1",
+      "name": "Integrity of sensor measurements",
+      "impactLevel": "Critical",
+      "impactDescription": "If sensor readings are forged, controllers act on a false view of the process and can drive the plant into unsafe or out-of-specification states.",
+      "protectionGoalType": "Integrity",
+      "Asset": {
+        "asset_id": "Data-1"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-1"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Safety"
+      }
+    },
+    {
+      "pg_id": "I-2",
+      "name": "Integrity of actuator commands",
+      "impactLevel": "Critical",
+      "impactDescription": "Tampered valve or pump commands let an attacker directly drive equipment into damaging or unsafe operation.",
+      "protectionGoalType": "Integrity",
+      "Asset": {
+        "asset_id": "Data-3"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-2"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Safety"
+      }
+    },
+    {
+      "pg_id": "I-3",
+      "name": "Integrity of PLC control logic",
+      "impactLevel": "Critical",
+      "impactDescription": "Modified controller logic can corrupt the entire stage's behaviour persistently, surviving operator intervention.",
+      "protectionGoalType": "Integrity",
+      "Asset": {
+        "asset_id": "Data-2"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-3"
+        },
+        {
+          "threatscenario_id": "T-9"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Process"
+      }
+    },
+    {
+      "pg_id": "A-1",
+      "name": "Availability of water treatment process",
+      "impactLevel": "Critical",
+      "impactDescription": "Loss of process control halts water production and may force a plant shutdown.",
+      "protectionGoalType": "Availability",
+      "Asset": {
+        "asset_id": "Func-1"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-4"
+        },
+        {
+          "threatscenario_id": "T-6"
+        },
+        {
+          "threatscenario_id": "T-13"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Operational"
+      }
+    },
+    {
+      "pg_id": "A-2",
+      "name": "Availability of SCADA monitoring",
+      "impactLevel": "Moderate",
+      "impactDescription": "If supervisory monitoring is lost, operators are blind to process state and cannot respond to developing problems.",
+      "protectionGoalType": "Availability",
+      "Asset": {
+        "asset_id": "Func-3"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-5"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Operational"
+      }
+    },
+    {
+      "pg_id": "I-4",
+      "name": "Integrity of historian data",
+      "impactLevel": "Moderate",
+      "impactDescription": "Falsified historian records can hide an ongoing attack and undermine incident investigation.",
+      "protectionGoalType": "Integrity",
+      "Asset": {
+        "asset_id": "Data-4"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-7"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Forensic"
+      }
+    },
+    {
+      "pg_id": "I-5",
+      "name": "Integrity of HMI configuration",
+      "impactLevel": "Moderate",
+      "impactDescription": "A tampered HMI can mask alarms and present a false picture of the plant to operators.",
+      "protectionGoalType": "Integrity",
+      "Asset": {
+        "asset_id": "Data-5"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-8"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Operational"
+      }
+    },
+    {
+      "pg_id": "I-6",
+      "name": "Integrity of engineering project files",
+      "impactLevel": "Critical",
+      "impactDescription": "Corrupted project sources propagate malicious logic to controllers on the next download.",
+      "protectionGoalType": "Integrity",
+      "Asset": {
+        "asset_id": "Data-6"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-9"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Process"
+      }
+    },
+    {
+      "pg_id": "C-1",
+      "name": "Confidentiality of process design and setpoints",
+      "impactLevel": "Moderate",
+      "impactDescription": "Disclosure of setpoints and control logic helps an attacker craft a precise, stealthy process manipulation.",
+      "protectionGoalType": "Confidentiality",
+      "Asset": {
+        "asset_id": "Data-2"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-10"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Intellectual Property"
+      }
+    },
+    {
+      "pg_id": "A-3",
+      "name": "Physical plant and process safety",
+      "impactLevel": "Critical",
+      "impactDescription": "Coordinated manipulation of sensors and actuators can cause tank overflow or chemical overdosing with safety and environmental consequences.",
+      "protectionGoalType": "Availability",
+      "Asset": {
+        "asset_id": "Func-2"
+      },
+      "ThreatScenarios": [
+        {
+          "threatscenario_id": "T-11"
+        },
+        {
+          "threatscenario_id": "T-12"
+        }
+      ],
+      "ImpactCategory": {
+        "name": "Safety"
+      }
+    },
+    {
+      "pg_id": "C-2",
+      "name": "Confidentiality of historian reporting data",
+      "impactLevel": "Negligible",
+      "impactDescription": "The aggregated production statistics in the historian are of low sensitivity and disclosure has minimal consequence.",
+      "protectionGoalType": "Confidentiality",
+      "Asset": {
+        "asset_id": "Data-4"
+      },
+      "ImpactCategory": {
+        "name": "Operational"
+      }
+    }
+  ],
+  "SecurityZones": [
+    {
+      "zone_id": "SZ-1",
+      "name": "Plant Enterprise Network (Level 3)",
+      "description": "The plant business and operations network from which the supervisory systems are reached for reporting and remote support.",
+      "external": true,
+      "isNetworkZone": true,
+      "isProximityZone": false,
+      "isHostZone": true,
+      "isStructuringBox": false,
+      "isVisible": true,
+      "isTopSecurityZone": true,
+      "ZoneExposures": [
+        {
+          "rating": "High",
+          "zoneExposureType": "Network",
+          "description": "The enterprise network carries general IT traffic and is reachable from many user hosts; its separation from the supervisory network is not yet confirmed.",
+          "Assumptions": [
+            {
+              "assumption_id": "A_zone-3"
+            }
+          ]
+        },
+        {
+          "rating": "Medium",
+          "zoneExposureType": "Host"
+        }
+      ],
+      "SecurityZone_Top": {
+        "zone_id": "SZ-1"
+      },
+      "TypeOf": {
+        "name": "General Network Zone",
+        "type": "Network"
+      }
+    },
+    {
+      "zone_id": "SZ-2",
+      "name": "Supervisory Network (Level 2)",
+      "description": "The supervisory control network hosting the SCADA/HMI workstation and the process historian.",
+      "external": false,
+      "isNetworkZone": true,
+      "isProximityZone": false,
+      "isHostZone": true,
+      "isStructuringBox": false,
+      "isVisible": true,
+      "isTopSecurityZone": false,
+      "subZonesNumber": "SubZone1",
+      "SecurityZone_Parent": {
+        "zone_id": "SZ-1"
+      },
+      "ZoneExposures": [
+        {
+          "rating": "Medium",
+          "zoneExposureType": "Network",
+          "description": "Reachable from the enterprise network through the plant firewall and routinely accessed by operators."
+        },
+        {
+          "rating": "Medium",
+          "zoneExposureType": "Host"
+        }
+      ],
+      "NetworkFacingInterfaces_Zone": [
+        {
+          "name": "Supervisory uplink to enterprise",
+          "description": "Connection used for reporting and remote operator support from the enterprise network.",
+          "subTypeN": "Network_User_Interface",
+          "interface_id": "NFI-1",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "High",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": true,
+          "message": "Directly connected to Plant Enterprise Network (Level 3)",
+          "ConnectedToSecurityZone": {
+            "zone_id": "SZ-1"
+          }
+        }
+      ],
+      "SecurityZone_Top": {
+        "zone_id": "SZ-1"
+      },
+      "TypeOf": {
+        "name": "Supervisory Network Zone",
+        "type": "Network"
+      }
+    },
+    {
+      "zone_id": "SZ-3",
+      "name": "Control Network (Level 1)",
+      "description": "The Level-1 control ring carrying Modbus-TCP and EtherNet/IP traffic between the six stage controllers and the supervisory network.",
+      "external": false,
+      "isNetworkZone": true,
+      "isProximityZone": false,
+      "isHostZone": true,
+      "isStructuringBox": false,
+      "isVisible": true,
+      "isTopSecurityZone": false,
+      "subZonesNumber": "SubZone1",
+      "SecurityZone_Parent": {
+        "zone_id": "SZ-2"
+      },
+      "ZoneExposures": [
+        {
+          "rating": "Medium",
+          "zoneExposureType": "Network",
+          "description": "Any host placed on the control ring can communicate with the controllers because the industrial protocols are unauthenticated.",
+          "Assumptions": [
+            {
+              "assumption_id": "A_zone-4"
+            }
+          ]
+        },
+        {
+          "rating": "Low",
+          "zoneExposureType": "Host"
+        }
+      ],
+      "SecurityZone_Top": {
+        "zone_id": "SZ-1"
+      },
+      "TypeOf": {
+        "name": "Control Network Zone",
+        "type": "Network"
+      }
+    },
+    {
+      "zone_id": "SZ-4",
+      "name": "Field Network (Level 0)",
+      "description": "The Level-0 field bus connecting sensors and actuators to their stage controllers.",
+      "external": false,
+      "isNetworkZone": true,
+      "isProximityZone": true,
+      "isHostZone": false,
+      "isStructuringBox": false,
+      "isVisible": true,
+      "isTopSecurityZone": false,
+      "subZonesNumber": "SubZone1",
+      "SecurityZone_Parent": {
+        "zone_id": "SZ-3"
+      },
+      "ZoneExposures": [
+        {
+          "rating": "Low",
+          "zoneExposureType": "Network",
+          "description": "Field signalling is confined to locked cabinets and conduit on the plant floor.",
+          "Assumptions": [
+            {
+              "assumption_id": "A_zone-1"
+            }
+          ]
+        },
+        {
+          "rating": "Low",
+          "zoneExposureType": "Proximity"
+        }
+      ],
+      "SecurityZone_Top": {
+        "zone_id": "SZ-1"
+      },
+      "TypeOf": {
+        "name": "Field Network Zone",
+        "type": "Network"
+      }
+    },
+    {
+      "zone_id": "SZ-5",
+      "name": "Engineering Zone",
+      "description": "The maintenance segment hosting the engineering workstation used to develop and download controller logic.",
+      "external": false,
+      "isNetworkZone": true,
+      "isProximityZone": false,
+      "isHostZone": true,
+      "isStructuringBox": false,
+      "isVisible": true,
+      "isTopSecurityZone": false,
+      "subZonesNumber": "SubZone2",
+      "SecurityZone_Parent": {
+        "zone_id": "SZ-2"
+      },
+      "ZoneExposures": [
+        {
+          "rating": "Low",
+          "zoneExposureType": "Network",
+          "description": "The engineering segment is normally connected only during maintenance windows.",
+          "Assumptions": [
+            {
+              "assumption_id": "A_zone-2"
+            }
+          ]
+        },
+        {
+          "rating": "Medium",
+          "zoneExposureType": "Host"
+        }
+      ],
+      "SecurityZone_Top": {
+        "zone_id": "SZ-1"
+      },
+      "TypeOf": {
+        "name": "Engineering Network Zone",
+        "type": "Network"
+      }
+    },
+    {
+      "zone_id": "SZ-6",
+      "name": "External / Internet",
+      "description": "Untrusted external networks reachable beyond the plant boundary, used only for vendor remote support.",
+      "external": true,
+      "isNetworkZone": true,
+      "isProximityZone": false,
+      "isHostZone": false,
+      "isStructuringBox": false,
+      "isVisible": true,
+      "isTopSecurityZone": true,
+      "ZoneExposures": [
+        {
+          "rating": "High",
+          "zoneExposureType": "Network",
+          "description": "Fully untrusted public network."
+        }
+      ],
+      "SecurityZone_Top": {
+        "zone_id": "SZ-6"
+      },
+      "TypeOf": {
+        "name": "General Network Zone",
+        "type": "Network"
+      }
+    }
+  ],
+  "SWComponents": [
+    {
+      "name": "PLC1 - Raw Water Supply",
+      "description": "Stage 1 controller managing raw water intake, the inlet motorised valve MV101 and the raw water pump P101 based on tank level transmitter LIT101.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-1",
+      "SecurityZone": {
+        "zone_id": "SZ-3"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "PLC1 control interface",
+          "description": "Modbus-TCP server exposing process tags and accepting actuator commands for Stage 1.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-1",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Control Network (Level 1)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-3"
+          },
+          "ProtocolType": {
+            "name": "Modbus-TCP"
+          }
+        }
+      ],
+      "InterSWCommunications": [
+        {
+          "name": "Field sensor data to PLC1",
+          "communication_id": "LC-1",
+          "specificExposureRating_C": "NoRating",
+          "CALCzoneDerivedExposure_C": "Low",
+          "viaUntrustedZones": false,
+          "message": "Level-0 measurements reported to PLC1",
+          "TargetInterface": {
+            "interface_id": "LI-1"
+          },
+          "SourceComponent": {
+            "subUnit_id": "SW-10"
+          },
+          "ProtocolType": {
+            "name": "EtherNet/IP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PLC2 - Chemical Dosing",
+      "description": "Stage 2 controller managing pre-treatment chemical dosing pumps and the analyser instruments AIT201-AIT203 for pH, ORP and conductivity.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-2",
+      "SecurityZone": {
+        "zone_id": "SZ-3"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "PLC2 control interface",
+          "description": "Modbus-TCP server controlling Stage 2 dosing pumps and reading water-quality analysers.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-2",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Control Network (Level 1)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-3"
+          },
+          "ProtocolType": {
+            "name": "Modbus-TCP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PLC3 - Ultrafiltration",
+      "description": "Stage 3 controller managing the ultrafiltration feed pump and backwash sequencing.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-3",
+      "SecurityZone": {
+        "zone_id": "SZ-3"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "PLC3 control interface",
+          "description": "Modbus-TCP server controlling the ultrafiltration stage.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-3",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Control Network (Level 1)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-3"
+          },
+          "ProtocolType": {
+            "name": "Modbus-TCP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PLC4 - Dechlorination",
+      "description": "Stage 4 controller managing UV dechlorination and sodium-bisulphite dosing before reverse osmosis.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-4",
+      "SecurityZone": {
+        "zone_id": "SZ-3"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "PLC4 control interface",
+          "description": "EtherNet/IP interface controlling the dechlorination stage.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-4",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Control Network (Level 1)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-3"
+          },
+          "ProtocolType": {
+            "name": "EtherNet/IP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PLC5 - Reverse Osmosis",
+      "description": "Stage 5 controller managing the high-pressure reverse-osmosis pumps and permeate quality monitoring.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-5",
+      "SecurityZone": {
+        "zone_id": "SZ-3"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "PLC5 control interface",
+          "description": "Modbus-TCP server controlling the reverse-osmosis stage and its setpoints.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-5",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Control Network (Level 1)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-3"
+          },
+          "ProtocolType": {
+            "name": "Modbus-TCP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PLC6 - Permeate and Backwash",
+      "description": "Stage 6 controller managing permeate transfer to product storage, membrane backwash and chemical cleaning.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-6",
+      "SecurityZone": {
+        "zone_id": "SZ-3"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "PLC6 control interface",
+          "description": "Modbus-TCP server controlling permeate transfer and backwash.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-6",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Control Network (Level 1)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-3"
+          },
+          "ProtocolType": {
+            "name": "Modbus-TCP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCADA / HMI Workstation",
+      "description": "Supervisory workstation presenting live process state and alarms to operators and forwarding operator commands to the controllers.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-7",
+      "SecurityZone": {
+        "zone_id": "SZ-2"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "HMI operator interface",
+          "description": "Operator-facing supervisory interface that polls controllers and issues setpoint and command changes.",
+          "softwareAttackSurfaceType": "User_Interface_over_network",
+          "interface_id": "LI-7",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Reachable from Supervisory Network (Level 2)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-2"
+          },
+          "ProtocolType": {
+            "name": "HTTPS"
+          }
+        }
+      ],
+      "InterSWCommunications": [
+        {
+          "name": "PLC1 process data to SCADA",
+          "communication_id": "LC-2",
+          "specificExposureRating_C": "NoRating",
+          "CALCzoneDerivedExposure_C": "Medium",
+          "viaUntrustedZones": false,
+          "message": "Stage-1 process state polled by the supervisory workstation",
+          "TargetInterface": {
+            "interface_id": "LI-7"
+          },
+          "SourceComponent": {
+            "subUnit_id": "SW-1"
+          },
+          "ProtocolType": {
+            "name": "Modbus-TCP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Process Historian",
+      "description": "Server collecting and retaining the time-series record of process variables, alarms and operator actions for monitoring and forensics.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-8",
+      "SecurityZone": {
+        "zone_id": "SZ-2"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "Historian query API",
+          "description": "Network API used to ingest process data and serve historical queries to reporting clients.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-8",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Reachable from Supervisory Network (Level 2)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-2"
+          },
+          "ProtocolType": {
+            "name": "HTTPS"
+          }
+        }
+      ],
+      "InterSWCommunications": [
+        {
+          "name": "SCADA data to historian",
+          "communication_id": "LC-3",
+          "specificExposureRating_C": "NoRating",
+          "CALCzoneDerivedExposure_C": "Medium",
+          "viaUntrustedZones": false,
+          "message": "Supervisory workstation streams process data into the historian",
+          "TargetInterface": {
+            "interface_id": "LI-8"
+          },
+          "SourceComponent": {
+            "subUnit_id": "SW-7"
+          },
+          "ProtocolType": {
+            "name": "HTTPS"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engineering Workstation",
+      "description": "Maintenance host used by control engineers to develop, compile and download controller logic to PLC1-PLC6.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-9",
+      "SecurityZone": {
+        "zone_id": "SZ-5"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "Engineering download interface",
+          "description": "Programming interface used to upload and download controller projects across the control network.",
+          "softwareAttackSurfaceType": "Network_Interface_API",
+          "interface_id": "LI-9",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Medium",
+          "abstractInterfaceType": "Network",
+          "isManagementInterface": true,
+          "fromUntrustedZones": false,
+          "message": "Reachable from Engineering Zone",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-5"
+          },
+          "ProtocolType": {
+            "name": "Proprietary"
+          }
+        }
+      ],
+      "InterSWCommunications": [
+        {
+          "name": "Engineering download to PLC3",
+          "communication_id": "LC-4",
+          "specificExposureRating_C": "NoRating",
+          "CALCzoneDerivedExposure_C": "Medium",
+          "viaUntrustedZones": false,
+          "message": "Controller project downloaded to Stage-3 controller",
+          "TargetInterface": {
+            "interface_id": "LI-3"
+          },
+          "SourceComponent": {
+            "subUnit_id": "SW-9"
+          },
+          "ProtocolType": {
+            "name": "Proprietary"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Level-0 Field Devices",
+      "description": "The aggregate of Stage-1 to Stage-6 sensors and actuators (level transmitters, flow meters, analysers, motorised valves and pumps) wired to their stage controllers.",
+      "scope": "In_Scope",
+      "subUnit_id": "SW-10",
+      "SecurityZone": {
+        "zone_id": "SZ-4"
+      },
+      "LogicalInterfaces": [
+        {
+          "name": "Field bus interface",
+          "description": "Wired sensor and actuator signalling presented to the stage controllers.",
+          "softwareAttackSurfaceType": "Dependency_on_Host",
+          "interface_id": "LI-10",
+          "specificExposureRating_I": "NoRating",
+          "CALCzoneDerivedExposure_I": "Low",
+          "abstractInterfaceType": "Host",
+          "isManagementInterface": false,
+          "fromUntrustedZones": false,
+          "message": "Directly connected to Field Network (Level 0)",
+          "ReachableFromSecurityZone": {
+            "zone_id": "SZ-4"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plant Firewall",
+      "description": "Boundary firewall between the supervisory network and the enterprise network; treated as part of the environment rather than analysed in depth.",
+      "scope": "Out_of_Scope",
+      "subUnit_id": "SW-11",
+      "SecurityZone": {
+        "zone_id": "SZ-1"
+      }
+    },
+    {
+      "name": "Vendor Remote Support",
+      "description": "Occasional vendor remote-support access from an external network; excluded because it is governed by a separate access agreement and is out of the analysis boundary.",
+      "scope": "Out_of_Scope",
+      "subUnit_id": "SW-12",
+      "SecurityZone": {
+        "zone_id": "SZ-6"
+      }
+    },
+    {
+      "name": "Enterprise Reporting Client",
+      "description": "Business reporting client on the enterprise network that reads aggregated production data; excluded as it only consumes already-published reports.",
+      "scope": "Out_of_Scope",
+      "subUnit_id": "SW-13",
+      "SecurityZone": {
+        "zone_id": "SZ-1"
+      }
+    }
+  ],
+  "ThreatScenarios": [
+    {
+      "threatscenario_id": "T-1",
+      "name": "False sensor data injection to PLC1",
+      "attackActionDesc": "An attacker on the Level-1 control network spoofs Modbus responses so that PLC1 receives a forged low level reading from LIT101, causing the controller to keep the inlet valve open and overfill the raw water tank.",
+      "weakness": "Unauthenticated Modbus-TCP allows a control-network host to forge sensor responses.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "Requires a foothold on the control network but no credentials, since the protocol has no authentication.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Critical",
+      "threatSpecificImpactComment": "A forged level reading directly drives the plant toward an unsafe overflow condition.",
+      "CALCAppliedImpactRating": "Critical",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "I-1"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-1"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Deploy control-network monitoring and physical high-level overflow interlocks independent of PLC1.",
+        "acceptanceComment": "High risk is not accepted by default and requires the listed mitigation."
+      }
+    },
+    {
+      "threatscenario_id": "T-2",
+      "name": "Actuator command manipulation on control ring",
+      "attackActionDesc": "An attacker performing a man-in-the-middle on the control ring rewrites Modbus write requests so that motorised valve MV101 is commanded open against the controller's intent, driving the actuator into an unsafe position.",
+      "weakness": "No integrity protection on Modbus write commands permits in-flight tampering.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "Needs an on-path position on the control ring, achievable after compromising any Level-1 host.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Critical",
+      "threatSpecificImpactComment": "Direct actuator control bypasses the controller logic and can damage equipment.",
+      "CALCAppliedImpactRating": "Critical",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "I-2"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-1"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Segment the control ring and apply unidirectional or authenticated command channels where feasible.",
+        "acceptanceComment": "Residual high risk requires mitigation before acceptance."
+      }
+    },
+    {
+      "threatscenario_id": "T-3",
+      "name": "Unauthorised modification of PLC control logic",
+      "attackActionDesc": "An attacker who reaches the engineering download interface downloads altered control logic to a stage controller, persistently changing how the stage responds to process conditions.",
+      "weakness": "Controller program download is not cryptographically authenticated or signed.",
+      "exploitabilityRating": "Low",
+      "exploitabilityComment": "Requires access to the engineering segment, which is normally connected only during maintenance windows.",
+      "threatSpecificExposureRating": "Low",
+      "threatSpecificExposureComment": "Engineering access is restricted to maintenance windows and a small staff.",
+      "CALCAppliedExposure": "Low",
+      "threatSpecificImpactRating": "Critical",
+      "threatSpecificImpactComment": "Malicious logic persists across operator intervention and corrupts the whole stage.",
+      "CALCAppliedImpactRating": "Critical",
+      "CALCLikelihood": "Unlikely",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "I-3"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-9"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Enforce controller key-switch run/program protection and signed project downloads.",
+        "acceptanceComment": "Critical risk is explicitly not accepted and tracked for treatment."
+      }
+    },
+    {
+      "threatscenario_id": "T-4",
+      "name": "Denial of service on the control ring",
+      "attackActionDesc": "An attacker floods the Level-1 control ring with traffic so that controllers can no longer exchange process state with the supervisory system, causing loss of coordinated process control.",
+      "weakness": "The control ring has limited bandwidth and no traffic prioritisation against flooding.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "A single compromised control-network host can generate disruptive traffic.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Loss of control degrades production but failsafe states limit physical harm.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "A-1"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-3"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": true,
+        "acceptanceComment": "Moderate risk accepted by default with monitoring."
+      }
+    },
+    {
+      "threatscenario_id": "T-5",
+      "name": "Compromise of the SCADA/HMI workstation",
+      "attackActionDesc": "An attacker exploits a vulnerability on the supervisory workstation to disrupt the HMI service, so operators lose their live view of the process and cannot react to alarms.",
+      "weakness": "The supervisory workstation runs general-purpose software with a broad attack surface.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "Reachable from the supervisory network and indirectly from the enterprise network if the firewall is misconfigured.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Operators lose visibility but the process keeps running on controller logic.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "A-2"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-7"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": true,
+        "acceptanceComment": "Moderate risk accepted by default with workstation hardening."
+      }
+    },
+    {
+      "threatscenario_id": "T-6",
+      "name": "Spoofed stop command halts raw water pump",
+      "attackActionDesc": "An attacker on the control network injects a forged command that stops pump P101, interrupting raw water supply to the downstream stages and disrupting production.",
+      "weakness": "Unauthenticated control protocol accepts any well-formed command from the network.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "Sending a single crafted Modbus command suffices once on the control network.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Production stops but no unsafe physical state results directly.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Likely",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "A-1"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-2"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Add command-source filtering and anomaly detection on the control network.",
+        "acceptanceComment": "High risk requires the listed mitigation."
+      }
+    },
+    {
+      "threatscenario_id": "T-7",
+      "name": "Tampering with historian records",
+      "attackActionDesc": "An attacker who reaches the historian query API alters stored process records to erase the evidence of a manipulation, undermining later incident investigation.",
+      "weakness": "Historian records lack tamper-evident storage or write segregation.",
+      "exploitabilityRating": "Low",
+      "exploitabilityComment": "Requires supervisory-network access and historian credentials or an API flaw.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Forensic value is lost but live process operation is unaffected.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Unlikely",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "I-4"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-8"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": true,
+        "acceptanceComment": "Low risk accepted by default."
+      }
+    },
+    {
+      "threatscenario_id": "T-8",
+      "name": "HMI alarm masking",
+      "attackActionDesc": "An attacker modifies the HMI configuration so that critical alarms are suppressed or recoloured, leaving operators unaware that the process has entered an abnormal state.",
+      "weakness": "HMI configuration can be changed without independent alarm verification.",
+      "exploitabilityRating": "Low",
+      "exploitabilityComment": "Requires write access to the HMI configuration on the supervisory workstation.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Masked alarms delay operator response to developing process upsets.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "I-5"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-7"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": true,
+        "acceptanceComment": "Moderate risk accepted by default with configuration change control."
+      }
+    },
+    {
+      "threatscenario_id": "T-9",
+      "name": "Malware on engineering workstation alters controller project",
+      "attackActionDesc": "An attacker plants malware on the engineering workstation that injects malicious logic into the controller project files, so the next legitimate download propagates the manipulation to a stage controller.",
+      "weakness": "Project files are not integrity-verified before download to the controller.",
+      "exploitabilityRating": "Low",
+      "exploitabilityComment": "Depends on defeating the workstation hardening assumption through phishing or removable media.",
+      "threatSpecificExposureRating": "Low",
+      "threatSpecificExposureComment": "The workstation is hardened and used only for maintenance, limiting exposure.",
+      "CALCAppliedExposure": "Low",
+      "threatSpecificImpactRating": "Critical",
+      "threatSpecificImpactComment": "Malicious logic reaches controllers through a trusted engineering channel.",
+      "CALCAppliedImpactRating": "Critical",
+      "CALCLikelihood": "Unlikely",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "I-3"
+        },
+        {
+          "pg_id": "I-6"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-9"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Apply project-file signing, workstation EDR, and removable-media controls.",
+        "acceptanceComment": "Critical supply-chain-style risk is not accepted by default."
+      }
+    },
+    {
+      "threatscenario_id": "T-10",
+      "name": "Eavesdropping on unencrypted control traffic",
+      "attackActionDesc": "An attacker passively captures unencrypted Modbus traffic on the control network to learn the reverse-osmosis setpoints and control logic needed to craft a stealthy future manipulation.",
+      "weakness": "Modbus-TCP transmits process data and setpoints in clear text.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "Passive capture is straightforward once any control-network port is reachable.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Disclosure alone causes no process effect but enables later targeted attacks.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "C-1"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-5"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": true,
+        "acceptanceComment": "Low confidentiality risk accepted by default for this process."
+      }
+    },
+    {
+      "threatscenario_id": "T-11",
+      "name": "Coordinated overflow of the raw water tank",
+      "attackActionDesc": "An attacker simultaneously spoofs the LIT101 level reading and forces the inlet valve open through PLC1, defeating the controller's level protection and driving the raw water tank to physical overflow.",
+      "weakness": "A single compromised control path governs both the level reading and the inlet actuator without independent interlock.",
+      "exploitabilityRating": "Low",
+      "exploitabilityComment": "Requires coordinated manipulation of two tags but no authentication once on the control network.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Critical",
+      "threatSpecificImpactComment": "Tank overflow is a safety and environmental event with site impact.",
+      "CALCAppliedImpactRating": "Critical",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "A-3"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-1"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Install a hardwired independent high-level switch that closes the inlet regardless of PLC1 state.",
+        "acceptanceComment": "Critical safety risk is not accepted and requires an independent protection layer."
+      }
+    },
+    {
+      "threatscenario_id": "T-12",
+      "name": "Chemical overdose via dosing controller manipulation",
+      "attackActionDesc": "An attacker forces PLC2 to run the chemical dosing pumps beyond their safe setpoint, overdosing the water with treatment chemicals and producing an out-of-specification, potentially hazardous product stream.",
+      "weakness": "Dosing setpoints can be overridden over the unauthenticated control interface.",
+      "exploitabilityRating": "Low",
+      "exploitabilityComment": "Requires control-network access and knowledge of the dosing tags.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Critical",
+      "threatSpecificImpactComment": "Chemical overdosing has direct safety and water-quality consequences.",
+      "CALCAppliedImpactRating": "Critical",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "A-3"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-2"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": false,
+        "mitigation": "Enforce physical dosing-rate limiters and independent quality analysers with shutdown interlocks.",
+        "acceptanceComment": "Critical safety risk requires independent dosing limits."
+      }
+    },
+    {
+      "threatscenario_id": "T-13",
+      "name": "Replay attack on dechlorination controller",
+      "attackActionDesc": "An attacker captures and replays earlier EtherNet/IP command frames to PLC4 so that a stale dechlorination setting is reapplied at the wrong time, degrading downstream reverse-osmosis protection.",
+      "weakness": "EtherNet/IP frames carry no freshness or sequence protection against replay.",
+      "exploitabilityRating": "Medium",
+      "exploitabilityComment": "Replay requires only capture-and-resend capability on the control network.",
+      "threatSpecificExposureRating": "NoRating",
+      "CALCAppliedExposure": "Medium",
+      "threatSpecificImpactRating": "Moderate",
+      "threatSpecificImpactComment": "Mis-timed dechlorination degrades treatment quality without immediate safety impact.",
+      "CALCAppliedImpactRating": "Moderate",
+      "CALCLikelihood": "Possible",
+      "CALCRiskRating": "Low",
+      "ProtectionGoals": [
+        {
+          "pg_id": "A-1"
+        }
+      ],
+      "AttackInterface": {
+        "interface_id": "LI-4"
+      },
+      "ReRating": {
+        "rrExposure": "NoRating",
+        "rrExploitability": "NoRating",
+        "rrImpact": "NoRating",
+        "CALCrrLikelihood": "Incomplete",
+        "CALCrrRiskRating": "No_Re_rating",
+        "isAvoided": false,
+        "isOriginalRRExposure": true,
+        "isOriginalRRExploitability": true,
+        "isOriginalRRImpact": true,
+        "isAcceptedByDefault": true,
+        "acceptanceComment": "Moderate risk accepted by default with network monitoring."
+      }
+    }
+  ]
+}
